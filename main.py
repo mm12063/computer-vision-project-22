@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
-import torchvision
-from torchvision import transforms, datasets, models, utils
+from torchvision import datasets, models, utils
+import torchvision.transforms as T
 from torch.utils.data import Dataset, DataLoader
 import natsort
 from PIL import Image
@@ -18,7 +18,7 @@ import file_locs
 #TODO
 # Balance
 
-def plot(metric, train_vals, test_vals, xtick_interval=2):
+def plot(metric, train_vals, test_vals, xtick_interval=2, save=False, save_loc="./", plot_name="No Name Given"):
     figure(figsize=(5, 3))
     plt.plot(train_vals, color="red")
     plt.plot(test_vals, color="blue")
@@ -28,6 +28,9 @@ def plot(metric, train_vals, test_vals, xtick_interval=2):
     plt.title(f'Train vs Test {metric.capitalize()}')
     plt.xticks(np.arange(0, len(train_vals)+1, xtick_interval))
     plt.show()
+    if save:
+        plt.savefig(save_loc)
+
 
 def get_mean_and_std(train_dataset):
     imgs = torch.stack([img_t for img_t, _ in train_dataset], dim=3)
@@ -61,6 +64,12 @@ def imshow(img, title=None):
     # plt.imshow(np.transpose(npimg, (1, 2, 0)))
     # plt.show()
 
+    remove_norm = T.Normalize(
+        mean=[-0.5130 / 0.2551, -0.3182 / 0.1793, -0.1666 / 0.1329],
+        std=[1 / 0.2551, 1 / 0.1793, 1 / 0.1329]
+    )
+
+    img = remove_norm(img)
     inp = img.numpy().transpose((1, 2, 0))
     # mean = np.array([0.485, 0.456, 0.406])
     # std = np.array([0.229, 0.224, 0.225])
@@ -163,28 +172,41 @@ def main():
                         help='probability that cutout will be used (default: 0.7)')
     parser.add_argument('--image-size', type=int, default=256, metavar='N',
                         help='resize image to this (square) size (default: 256)')
+    parser.add_argument('--save-plot-dir', type=str, default="./", metavar='plots_loc',
+                        help='directory where to save the plots')
+    parser.add_argument('--save-plots', action='store_true', default=False,
+                        help='bool to save plots or not')
+    parser.add_argument('--save-model-dir', type=str, default="./", metavar='model_loc',
+                        help='directory where to save the model')
+    parser.add_argument('--save-model', action='store_true', default=False,
+                        help='bool to save model or not')
     args = parser.parse_args()
 
 
     # Create the transformations
     trans = []
-    trans.append(torchvision.transforms.ToTensor())
-    trans.append(torchvision.transforms.Resize((args.image_size, args.image_size)))
-    trans.append(torchvision.transforms.Normalize(
-        (0.5130, 0.3182, 0.1666), # Correct vals
-        (0.2551, 0.1793, 0.1329)) # Correct vals
+    trans.append(T.ToTensor())
+    trans.append(T.Resize((args.image_size, args.image_size)))
+    trans.append(T.Normalize(
+        (0.5130, 0.3182, 0.1666),
+        (0.2551, 0.1793, 0.1329))
     )
 
+
+
+
+    is_cutout_used = "False"
     if args.use_cutout:
-        trans.append(torchvision.transforms.RandomErasing(p=0.6,scale=(0.04, 0.12)))
+        trans.append(T.RandomErasing(p=0.6, scale=(0.04, 0.12)))
+        is_cutout_used = "True"
 
-    transforms = torchvision.transforms.Compose(trans)
+    transforms = T.Compose(trans)
 
-
+    DROP_VALS = ['ID', 'Disease_Risk']
     y_train_vals = pd.read_csv(file_locs.TRAIN_CSV)
-    y_train_vals = np.array(y_train_vals.drop(['ID'], axis=1))
+    y_train_vals = np.array(y_train_vals.drop(DROP_VALS, axis=1))
     y_val_vals = pd.read_csv(file_locs.VAL_CSV)
-    y_val_vals = np.array(y_val_vals.drop(['ID'], axis=1))
+    y_val_vals = np.array(y_val_vals.drop(DROP_VALS, axis=1))
 
     train_dataset = CustomDataSet(file_locs.TRAIN_DS + "resized/auto_crop/same_size/", y_values=y_train_vals, transform=transforms)
     val_dataset = CustomDataSet(file_locs.VAL_DS + "resized/auto_crop/same_size/", y_values=y_val_vals, transform=transforms)
@@ -216,7 +238,7 @@ def main():
         model = models.resnet18(pretrained=True)
 
     # Update the output layer
-    num_classes = 46
+    num_classes = 45
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, num_classes)
 
@@ -226,7 +248,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 
-    best_model_name = ""
+
     losses_train = []
     losses_test = []
     acc_train = []
@@ -241,14 +263,36 @@ def main():
         losses_test.append(test_loss)
         acc_test.append(test_acc)
 
-        # model_file = 'models/model_' + str(epoch) + '.pth'
-        # torch.save(model.state_dict(), model_file)
-        # print('Saved model to ' + model_file + '.\n')
+    # Create full model name str
+    lr_str = str(args.lr)
+    lr_str = lr_str[lr_str.rfind(".") + 1:]
+    full_model_name = f'{args.model_name}'
+    full_model_name += f'__l_{lr_str}__b_{args.batch_size}__i_{args.image_size}'
+    full_model_name += f'__e_{args.epochs}__c_{is_cutout_used}'
+
+    if args.save_model:
+        full_path = args.save_model_dir + full_model_name + ".pth"
+        torch.save(model.state_dict(), full_path)
+        print(f'Saved model to {full_path}')
 
     # Show the metric plots
     xticks = 5
-    plot('loss', losses_train, losses_test, xtick_interval=xticks)
-    plot('accuracy', acc_train, acc_test, xtick_interval=xticks)
+    plot('loss',
+         losses_train,
+         losses_test,
+         xtick_interval=xticks,
+         save=args.save_plots,
+         save_loc=args.save_plot_dir,
+         plot_name= f'loss_{full_model_name}.png'
+         )
+    plot('accuracy',
+         acc_train,
+         acc_test,
+         xtick_interval=xticks,
+         save=args.save_plots,
+         save_loc=args.save_plot_dir,
+         plot_name = f'acc_{full_model_name}.png'
+         )
 
 
 
