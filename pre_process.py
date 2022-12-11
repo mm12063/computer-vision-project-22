@@ -10,28 +10,29 @@ from tqdm import tqdm
 
 DATASETS_TO_UPDATE = [
     file_locs.TRAIN_DS,
-    file_locs.VAL_DS
-    file_locs.TEST_DS
+    # file_locs.VAL_DS,
+    # file_locs.TEST_DS
 ]
 
 def resize_large_images(ds_loc):
     print("Resizing the large images...")
-    DIR = f"{ds_loc}resized/"
-    if not os.path.exists(DIR):
-        os.makedirs(DIR)
+    START_DIR = f"{ds_loc}"
+    DEST_DIR = f"{START_DIR}resized/"
+    if not os.path.exists(DEST_DIR):
+        os.makedirs(DEST_DIR)
 
-    files = [f for f in listdir(DIR) if isfile(join(DIR, f))]
+    files = [f for f in listdir(START_DIR) if isfile(join(START_DIR, f))]
 
     large_img_size = (4288, 2848)
 
     for filename in tqdm(files):
         full_loc = ds_loc + filename
-        if (filename == ".DS_Store") or exists(DIR+filename):
+        if (filename == ".DS_Store") or exists(DEST_DIR+filename):
             continue
         im = Image.open(full_loc)
         if im.size == large_img_size:
             resizedImage = im.resize((int(large_img_size[0]*.5), int(large_img_size[1]*.5)), Image.Resampling.LANCZOS)
-            resizedImage.save(f"{DIR}{filename}", 'png')
+            resizedImage.save(f"{DEST_DIR}{filename}", 'png')
 
 
 def crop_to_remove_border(image):
@@ -48,23 +49,24 @@ def crop_to_remove_border(image):
 
 def auto_cropping(ds_loc):
     print("Auto cropping to remove the black border...")
-    DIR = f"{ds_loc}resized/auto_crop/"
+    START_DIR = f"{ds_loc}resized/"
+    DEST_DIR = f"{START_DIR}/auto_crop/"
 
-    if not os.path.exists(DIR):
-        os.makedirs(DIR)
+    if not os.path.exists(DEST_DIR):
+        os.makedirs(DEST_DIR)
 
-    files = [f for f in listdir(DIR) if isfile(join(DIR, f))]
+    files = [f for f in listdir(START_DIR) if isfile(join(START_DIR, f))]
 
     for filename in tqdm(files):
         full_loc = ds_loc+filename
-        if (filename == ".DS_Store") or exists(DIR+filename):
+        if (filename == ".DS_Store") or exists(DEST_DIR+filename):
             continue
         im = Image.open(full_loc)
         cropped_image = crop_to_remove_border(im)
-        cropped_image.save(f"{DIR}{filename}", 'png')
+        cropped_image.save(f"{DEST_DIR}{filename}", 'png')
 
 
-def update_bad_crops(ds_loc):
+def revert_bad_crops(ds_loc):
     print("Checking for bad crops and reverting to original image...")
     DIR = f"{ds_loc}resized/auto_crop/"
 
@@ -87,17 +89,17 @@ def update_bad_crops(ds_loc):
 def crop_all_to_same_size(ds_loc):
     print("Cropping all images to same size...")
     START_DIR = f"{ds_loc}resized/auto_crop/"
-    DIR = f"{START_DIR}same_size/"
+    DEST_DIR = f"{START_DIR}same_size/"
     CROP_SIZE = 1350
 
-    if not os.path.exists(DIR):
-        os.makedirs(DIR)
+    if not os.path.exists(DEST_DIR):
+        os.makedirs(DEST_DIR)
 
     files = [f for f in listdir(START_DIR) if isfile(join(START_DIR, f))]
 
     for filename in tqdm(files):
         full_loc = START_DIR + filename
-        if (filename == ".DS_Store") or exists(DIR+filename):
+        if (filename == ".DS_Store") or exists(DEST_DIR+filename):
             continue
         im = Image.open(full_loc)
         width, height = im.size
@@ -108,7 +110,7 @@ def crop_all_to_same_size(ds_loc):
         bottom = (height + CROP_SIZE) / 2
 
         cropped = im.crop((left, top, right, bottom))
-        cropped.save(f"{DIR}{filename}", 'png')
+        cropped.save(f"{DEST_DIR}{filename}", 'png')
 
 
 
@@ -133,7 +135,7 @@ for ds_loc in DATASETS_TO_UPDATE:
     print(f"Updating DS: {ds_loc}")
     resize_large_images(ds_loc)
     auto_cropping(ds_loc)
-    update_bad_crops(ds_loc)
+    revert_bad_crops(ds_loc)
     crop_all_to_same_size(ds_loc)
     resize_all(ds_loc)
     print("*"*20)
