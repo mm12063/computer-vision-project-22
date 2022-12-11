@@ -17,20 +17,19 @@ def resize_large_images(ds_loc):
     print("Resizing the large images...")
     START_DIR = f"{ds_loc}"
     DEST_DIR = f"{START_DIR}resized/"
+    LARGE_IMG_SIZE = (4288, 2848)
+
     if not os.path.exists(DEST_DIR):
         os.makedirs(DEST_DIR)
 
     files = [f for f in listdir(START_DIR) if isfile(join(START_DIR, f))]
-
-    large_img_size = (4288, 2848)
-
     for filename in tqdm(files):
         full_loc = ds_loc + filename
         if (filename == ".DS_Store") or exists(DEST_DIR+filename):
             continue
         im = Image.open(full_loc)
-        if im.size == large_img_size:
-            resizedImage = im.resize((int(large_img_size[0]*.5), int(large_img_size[1]*.5)), Image.Resampling.LANCZOS)
+        if im.size == LARGE_IMG_SIZE:
+            resizedImage = im.resize((int(LARGE_IMG_SIZE[0]*.5), int(LARGE_IMG_SIZE[1]*.5)), Image.Resampling.LANCZOS)
             resizedImage.save(f"{DEST_DIR}{filename}", 'png')
 
 
