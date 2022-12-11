@@ -10,8 +10,8 @@ from tqdm import tqdm
 
 DATASETS_TO_UPDATE = [
     file_locs.TRAIN_DS,
-    # file_locs.VAL_DS,
-    # file_locs.TEST_DS
+    file_locs.VAL_DS,
+    file_locs.TEST_DS
 ]
 
 def resize_large_images(ds_loc):
