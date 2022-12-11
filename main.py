@@ -9,119 +9,14 @@ from torchvision import transforms, datasets, models, utils
 from torch.utils.data import Dataset, DataLoader
 import natsort
 from PIL import Image
-import PIL
 from matplotlib.pyplot import figure
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import file_locs
-from os.path import exists
 
-
-# RESIZE THE LARGE IMAGES
-# from os import listdir
-# from os.path import isfile, join
-# files = [f for f in listdir(TRAIN_DS) if isfile(join(TRAIN_DS, f))]
-#
-# TRAIN_DS_PROC = f"{TRAIN_DS}processed/"
-# if not os.path.exists(TRAIN_DS_PROC):
-#     os.makedirs(TRAIN_DS_PROC)
-#
-# large_img_size = (4288, 2848)
-#
-# for i in files:
-#     full_loc = TRAIN_DS+i
-#     filename = full_loc[full_loc.rfind('/')+1:]
-#     if (filename == ".DS_Store"):
-#         continue
-#     im = Image.open(full_loc)
-#     if im.size == large_img_size:
-#         resizedImage = im.resize((int(large_img_size[0] * .5), int(large_img_size[1] * .5)), PIL.Image.ANTIALIAS)
-#         resizedImage.save(f"{TRAIN_DS_PROC}{filename}", 'png')
-#
-#
-# DIR_TO_UPDATE = file_locs.TRAIN_DS
-#
-# from os import listdir
-# from os.path import isfile, join
-# files = [f for f in listdir(DIR_TO_UPDATE) if isfile(join(DIR_TO_UPDATE, f))]
-#
-# TRAIN_DS_PROC = f"{DIR_TO_UPDATE}auto_crop/"
-#
-# if not os.path.exists(TRAIN_DS_PROC):
-#     os.makedirs(TRAIN_DS_PROC)
-#
-# def auto_crop(image):
-#     thresh = 70
-#     im = np.array(image)
-#     im[im < thresh] = 0
-#     y_nonzero, x_nonzero, _ = np.nonzero(im)
-#     return image.crop((np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero)))
-#
-# def update_contrast(image):
-#     thresh = 70
-#     im = np.array(image)
-#     im[im < thresh] = 0
-#     y_nonzero, x_nonzero, _ = np.nonzero(im)
-#     return image.crop((np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero)))
-#
-#
-# FILE_ID = 1797
-# for i, file in enumerate(files):
-#     # full_loc = DIR_TO_UPDATE+file
-#     full_loc = f"{DIR_TO_UPDATE}{FILE_ID}.png"
-#     filename = full_loc[full_loc.rfind('/')+1:]
-#     # if (filename == ".DS_Store") or exists(full_loc):
-#     #     continue
-#     im = Image.open(full_loc)
-#     cropped_image = update_contrast(im)
-#     cropped_image.save(f"{TRAIN_DS_PROC}{filename}", 'png')
-#     if i >= 1:
-#         break
-#
-#
-# FILE_ID = 1797
-# for file in files:
-#     # full_loc = DIR_TO_UPDATE+file
-#     full_loc = f"{DIR_TO_UPDATE}{FILE_ID}.png"
-#     filename = full_loc[full_loc.rfind('/')+1:]
-#     # if (filename == ".DS_Store") or exists(full_loc):
-#     #     continue
-#     im = Image.open(full_loc)
-#     cropped_image = auto_crop(im)
-#     cropped_image.save(f"{TRAIN_DS_PROC}{filename}", 'png')
-#     exit(0)
-#
-#
-# TRAIN_DS_PROC = f"{DIR_TO_UPDATE}auto_crop/"
-# DIR_TO_UPDATE = TRAIN_DS_PROC
-# files = [f for f in listdir(DIR_TO_UPDATE) if isfile(join(DIR_TO_UPDATE, f))]
-#
-# sizes_found = []
-# for file in files:
-#     full_loc = DIR_TO_UPDATE+file
-#     filename = full_loc[full_loc.rfind('/')+1:]
-#     if (filename == ".DS_Store"):
-#         continue
-#     im = Image.open(full_loc)
-#     img_size = im.size
-#     if img_size not in sizes_found:
-#         sizes_found.append(img_size)
-#
-# for size in sizes_found:
-#     print(size)
-#
-#
-#
-#
-# exit(0)
-
-
-
-
-
-
-
+#TODO
+# Balance
 
 def plot(metric, train_vals, test_vals, xtick_interval=2):
     figure(figsize=(5, 3))
@@ -134,13 +29,10 @@ def plot(metric, train_vals, test_vals, xtick_interval=2):
     plt.xticks(np.arange(0, len(train_vals)+1, xtick_interval))
     plt.show()
 
-
-
-
-# Normalise
-# Balance
-# Arguments
-
+def get_mean_and_std(train_dataset):
+    imgs = torch.stack([img_t for img_t, _ in train_dataset], dim=3)
+    print(imgs.view(3, -1).mean(dim=1))
+    print(imgs.view(3, -1).std(dim=1))
 
 class CustomDataSet(Dataset):
     def __init__(self, main_dir, y_values, transform):
@@ -267,6 +159,8 @@ def main():
                         help='Print the values during run')
     parser.add_argument('--use-cutout', action='store_true', default=False,
                         help='Adds cutout transformation')
+    parser.add_argument('--cutout-prob', type=float, default=0.7, metavar='CP',
+                        help='probability that cutout will be used (default: 0.7)')
     parser.add_argument('--image-size', type=int, default=256, metavar='N',
                         help='resize image to this (square) size (default: 256)')
     args = parser.parse_args()
@@ -275,12 +169,14 @@ def main():
     # Create the transformations
     trans = []
     trans.append(torchvision.transforms.ToTensor())
-    trans.append(torchvision.transforms.CenterCrop((1424, 1424)))
     trans.append(torchvision.transforms.Resize((args.image_size, args.image_size)))
-    # trans.append(torchvision.transforms.Normalize((0.4915, 0.4823, 0.4468),(0.2470, 0.2435, 0.2616)))
+    trans.append(torchvision.transforms.Normalize(
+        (0.5130, 0.3182, 0.1666), # Correct vals
+        (0.2551, 0.1793, 0.1329)) # Correct vals
+    )
 
     if args.use_cutout:
-        trans.append(torchvision.transforms.RandomErasing(p=0.8,scale=(0.04, 0.12)))
+        trans.append(torchvision.transforms.RandomErasing(p=0.6,scale=(0.04, 0.12)))
 
     transforms = torchvision.transforms.Compose(trans)
 
@@ -290,16 +186,9 @@ def main():
     y_val_vals = pd.read_csv(file_locs.VAL_CSV)
     y_val_vals = np.array(y_val_vals.drop(['ID'], axis=1))
 
-    train_dataset = CustomDataSet(file_locs.TRAIN_DS, y_values=y_train_vals, transform=transforms)
-
-
-
-    # print(imgs)
-    # print(imgs.view(3, -1).mean(dim=1))
-    # print(imgs.view(3, -1).std(dim=1))
-    # exit(0)
-
-    val_dataset = CustomDataSet(file_locs.VAL_DS, y_values=y_val_vals, transform=transforms)
+    train_dataset = CustomDataSet(file_locs.TRAIN_DS + "resized/auto_crop/same_size/", y_values=y_train_vals, transform=transforms)
+    val_dataset = CustomDataSet(file_locs.VAL_DS + "resized/auto_crop/same_size/", y_values=y_val_vals, transform=transforms)
+    # get_mean_and_std(train_dataset)
 
     trainsubset_ind = torch.randperm(len(train_dataset))[:10]
     train_dataset = torch.utils.data.Subset(train_dataset, trainsubset_ind)
