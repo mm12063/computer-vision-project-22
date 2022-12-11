@@ -126,6 +126,9 @@ def resize_all(ds_loc):
         if (filename == ".DS_Store"):
             continue
         im = Image.open(full_loc)
+        width, height = im.size
+        if width == RESIZE_SIZE and height == RESIZE_SIZE:
+            continue
         resized = im.resize((int(RESIZE_SIZE), int(RESIZE_SIZE)), Image.Resampling.LANCZOS)
         resized.save(f"{DIR}{filename}", 'png')
 
