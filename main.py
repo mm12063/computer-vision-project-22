@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -13,16 +14,8 @@ from matplotlib.pyplot import figure
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
-
-print_vals = False
-batch_size = 10
-lr = 0.001
-epochs = 10
-log_interval = 100
-# lr_reducer = 1
-
-num_workers = 0
-best_acc = 0
+import file_locs
+from os.path import exists
 
 
 # RESIZE THE LARGE IMAGES
@@ -45,6 +38,87 @@ best_acc = 0
 #     if im.size == large_img_size:
 #         resizedImage = im.resize((int(large_img_size[0] * .5), int(large_img_size[1] * .5)), PIL.Image.ANTIALIAS)
 #         resizedImage.save(f"{TRAIN_DS_PROC}{filename}", 'png')
+#
+#
+# DIR_TO_UPDATE = file_locs.TRAIN_DS
+#
+# from os import listdir
+# from os.path import isfile, join
+# files = [f for f in listdir(DIR_TO_UPDATE) if isfile(join(DIR_TO_UPDATE, f))]
+#
+# TRAIN_DS_PROC = f"{DIR_TO_UPDATE}auto_crop/"
+#
+# if not os.path.exists(TRAIN_DS_PROC):
+#     os.makedirs(TRAIN_DS_PROC)
+#
+# def auto_crop(image):
+#     thresh = 70
+#     im = np.array(image)
+#     im[im < thresh] = 0
+#     y_nonzero, x_nonzero, _ = np.nonzero(im)
+#     return image.crop((np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero)))
+#
+# def update_contrast(image):
+#     thresh = 70
+#     im = np.array(image)
+#     im[im < thresh] = 0
+#     y_nonzero, x_nonzero, _ = np.nonzero(im)
+#     return image.crop((np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero)))
+#
+#
+# FILE_ID = 1797
+# for i, file in enumerate(files):
+#     # full_loc = DIR_TO_UPDATE+file
+#     full_loc = f"{DIR_TO_UPDATE}{FILE_ID}.png"
+#     filename = full_loc[full_loc.rfind('/')+1:]
+#     # if (filename == ".DS_Store") or exists(full_loc):
+#     #     continue
+#     im = Image.open(full_loc)
+#     cropped_image = update_contrast(im)
+#     cropped_image.save(f"{TRAIN_DS_PROC}{filename}", 'png')
+#     if i >= 1:
+#         break
+#
+#
+# FILE_ID = 1797
+# for file in files:
+#     # full_loc = DIR_TO_UPDATE+file
+#     full_loc = f"{DIR_TO_UPDATE}{FILE_ID}.png"
+#     filename = full_loc[full_loc.rfind('/')+1:]
+#     # if (filename == ".DS_Store") or exists(full_loc):
+#     #     continue
+#     im = Image.open(full_loc)
+#     cropped_image = auto_crop(im)
+#     cropped_image.save(f"{TRAIN_DS_PROC}{filename}", 'png')
+#     exit(0)
+#
+#
+# TRAIN_DS_PROC = f"{DIR_TO_UPDATE}auto_crop/"
+# DIR_TO_UPDATE = TRAIN_DS_PROC
+# files = [f for f in listdir(DIR_TO_UPDATE) if isfile(join(DIR_TO_UPDATE, f))]
+#
+# sizes_found = []
+# for file in files:
+#     full_loc = DIR_TO_UPDATE+file
+#     filename = full_loc[full_loc.rfind('/')+1:]
+#     if (filename == ".DS_Store"):
+#         continue
+#     im = Image.open(full_loc)
+#     img_size = im.size
+#     if img_size not in sizes_found:
+#         sizes_found.append(img_size)
+#
+# for size in sizes_found:
+#     print(size)
+#
+#
+#
+#
+# exit(0)
+
+
+
+
 
 
 
@@ -61,46 +135,11 @@ def plot(metric, train_vals, test_vals, xtick_interval=2):
     plt.show()
 
 
-transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.CenterCrop((1424, 1424)),
-        transforms.Resize((256,256))
-    ])
-
-TRAIN_DS = "./fundus_ds/Training_Set/Training_Set/Training/resized/"
-TRAIN_CSV = "./fundus_ds/Training_Set/Training_Set/RFMiD_Training_Labels.csv"
-VAL_DS = "./fundus_ds/Evaluation_Set/Evaluation_Set/Validation/resized/"
-VAL_CSV = "./fundus_ds/Training_Set/Training_Set/RFMiD_Training_Labels.csv"
 
 
-#
-# # RESIZE THE LARGE IMAGES
-# from os import listdir
-# from os.path import isfile, join
-#
-#
-# DIR_TO_UPDATE = TRAIN_DS # UPDATE THIS FOR TRAIN / VAL
-#
-# files = [f for f in listdir(DIR_TO_UPDATE) if isfile(join(DIR_TO_UPDATE, f))]
-#
-# TRAIN_DS_PROC = f"{DIR_TO_UPDATE}resized/"
-# if not os.path.exists(TRAIN_DS_PROC):
-#     os.makedirs(TRAIN_DS_PROC)
-#
-# large_img_size = (4288, 2848)
-#
-# for i in files:
-#     full_loc = DIR_TO_UPDATE+i
-#     filename = full_loc[full_loc.rfind('/')+1:]
-#     if (filename == ".DS_Store"):
-#         continue
-#     im = Image.open(full_loc)
-#     if im.size == large_img_size:
-#         resizedImage = im.resize((int(large_img_size[0] * .5), int(large_img_size[1] * .5)), PIL.Image.ANTIALIAS)
-#         resizedImage.save(f"{TRAIN_DS_PROC}{filename}", 'png')
-
-
-
+# Normalise
+# Balance
+# Arguments
 
 
 class CustomDataSet(Dataset):
@@ -120,29 +159,6 @@ class CustomDataSet(Dataset):
         tensor_image = self.transform(image)
         return tensor_image, self.y[idx]
 
-
-y_train_vals = pd.read_csv(TRAIN_CSV)
-y_train_vals = np.array(y_train_vals.drop(['ID', 'DR'], axis=1))
-
-y_val_vals = pd.read_csv(VAL_CSV)
-y_val_vals = np.array(y_val_vals.drop(['ID', 'DR'], axis=1))
-
-
-
-train_dataset = CustomDataSet(TRAIN_DS, y_values=y_train_vals, transform=transforms)
-val_dataset = CustomDataSet(VAL_DS, y_values=y_val_vals, transform=transforms)
-
-
-trainsubset_ind = torch.randperm(len(train_dataset))[:1000]
-train_dataset = torch.utils.data.Subset(train_dataset, trainsubset_ind)
-valsubset_ind = torch.randperm(len(train_dataset))[:30]
-val_dataset = torch.utils.data.Subset(val_dataset, valsubset_ind)
-
-train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-
-val_loader = torch.utils.data.DataLoader(
-    val_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
 
 
@@ -164,23 +180,10 @@ def imshow(img, title=None):
         plt.title(title)
     plt.pause(0.001)
 
-images, labels = next(iter(train_loader))
-# imshow(utils.make_grid(images))
 
 
 
-
-model = models.resnet18(pretrained=True)
-
-num_classes = 45
-num_ftrs = model.fc.in_features
-model.fc = nn.Linear(num_ftrs, num_classes)
-
-# criterion = nn.BCELoss()
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=lr)
-
-def train(epoch):
+def train(args, epoch, model, optimizer, criterion, train_loader):
     model.train()
     train_loss = 0
     correct = 0
@@ -189,27 +192,21 @@ def train(epoch):
     for batch_idx, (data, targets) in enumerate(train_loader):
         optimizer.zero_grad()
         output = model(data)
-        if print_vals:
+        if args.print_vals:
             print("output.shape",output.shape)
             print("target.shape", targets.shape)
 
         targets = targets.to(torch.float32)
-        # targets = torch.argmax(targets, 1)
-
         loss = criterion(output, targets)
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
 
-        # print(output)
-
-        # exit(0)
-
         predicted = output
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        if batch_idx % log_interval == 0:
+        if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
@@ -224,7 +221,7 @@ def train(epoch):
 
 
 
-def validation():
+def validation(model, val_loader):
     model.eval()
     validation_loss = 0
     correct = 0
@@ -232,7 +229,12 @@ def validation():
         output = model(data)
         targets = targets.to(torch.float32)
         validation_loss += F.cross_entropy(output, targets, reduction="sum").item() # sum up batch loss
-        pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
+
+        # _, pred_t = torch.max(output, dim=1)
+        correct += torch.sum(output == targets).item()
+
+        # pred = output.data
+        # print(output.data)
         # correct += pred.eq(targets.data.view_as(pred)).cpu().sum()
 
     validation_loss /= len(val_loader.dataset)
@@ -247,34 +249,117 @@ def validation():
 
 
 
-best_model_name = ""
-run_training = True
-
-losses_train = []
-losses_test = []
-acc_train = []
-acc_test = []
-
-for epoch in range(1, epochs + 1):
-    train_loss, train_acc = train(epoch)
-    losses_train.append(train_loss)
-    acc_train.append(train_acc)
-
-    test_loss, test_acc = validation()
-    losses_test.append(test_loss)
-    acc_test.append(test_acc)
-
-    # model_file = 'models/model_' + str(epoch) + '.pth'
-    # torch.save(model.state_dict(), model_file)
-    # print('Saved model to ' + model_file + '.\n')
-
-
-
-xticks = 5
-plot('loss', losses_train, losses_test, xtick_interval=xticks)
-plot('accuracy', acc_train, acc_test, xtick_interval=xticks)
+def main():
+    parser = argparse.ArgumentParser(description="DESCRIPTION")
+    parser.add_argument('--batch-size', type=int, default=2, metavar='N',
+                        help='input batch size for training (default: 2)')
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+                        help='number of intervals to log (default: 10)')
+    parser.add_argument('--num-workers', type=int, default=0, metavar='N',
+                        help='number of workers to use (default: 0)')
+    parser.add_argument('--lr', type=float, default=1.0, metavar='LR',
+                        help='learning rate (default: 1.0)')
+    parser.add_argument('--model-name', type=str, default="resent18", metavar='model',
+                        help='Resnet Size: resent18, resnet50, resnet152')
+    parser.add_argument('--print-vals', action='store_true', default=False,
+                        help='Print the values during run')
+    parser.add_argument('--use-cutout', action='store_true', default=False,
+                        help='Adds cutout transformation')
+    parser.add_argument('--image-size', type=int, default=256, metavar='N',
+                        help='resize image to this (square) size (default: 256)')
+    args = parser.parse_args()
 
 
+    # Create the transformations
+    trans = []
+    trans.append(torchvision.transforms.ToTensor())
+    trans.append(torchvision.transforms.CenterCrop((1424, 1424)))
+    trans.append(torchvision.transforms.Resize((args.image_size, args.image_size)))
+    # trans.append(torchvision.transforms.Normalize((0.4915, 0.4823, 0.4468),(0.2470, 0.2435, 0.2616)))
+
+    if args.use_cutout:
+        trans.append(torchvision.transforms.RandomErasing(p=0.8,scale=(0.04, 0.12)))
+
+    transforms = torchvision.transforms.Compose(trans)
+
+
+    y_train_vals = pd.read_csv(file_locs.TRAIN_CSV)
+    y_train_vals = np.array(y_train_vals.drop(['ID'], axis=1))
+    y_val_vals = pd.read_csv(file_locs.VAL_CSV)
+    y_val_vals = np.array(y_val_vals.drop(['ID'], axis=1))
+
+    train_dataset = CustomDataSet(file_locs.TRAIN_DS, y_values=y_train_vals, transform=transforms)
+
+
+
+    # print(imgs)
+    # print(imgs.view(3, -1).mean(dim=1))
+    # print(imgs.view(3, -1).std(dim=1))
+    # exit(0)
+
+    val_dataset = CustomDataSet(file_locs.VAL_DS, y_values=y_val_vals, transform=transforms)
+
+    trainsubset_ind = torch.randperm(len(train_dataset))[:10]
+    train_dataset = torch.utils.data.Subset(train_dataset, trainsubset_ind)
+    valsubset_ind = torch.randperm(len(val_dataset))[:3]
+    val_dataset = torch.utils.data.Subset(val_dataset, valsubset_ind)
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+
+    val_loader = torch.utils.data.DataLoader(
+        val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+
+
+    # Show some images
+    images, labels = next(iter(train_loader))
+    imshow(utils.make_grid(images))
+
+
+    # Set the model
+    if args.model_name == "resnet50":
+        model = models.resnet18(pretrained=True)
+    elif args.model_name == "resnet152":
+        model = models.resnet152(pretrained=True)
+    else:
+        model = models.resnet18(pretrained=True)
+
+    # Update the output layer
+    num_classes = 46
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, num_classes)
+
+    # Set the Loss/Optimizers
+    # criterion = nn.BCELoss()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+
+    best_model_name = ""
+    losses_train = []
+    losses_test = []
+    acc_train = []
+    acc_test = []
+
+    for epoch in range(1, args.epochs + 1):
+        train_loss, train_acc = train(args, epoch, model, optimizer, criterion, train_loader)
+        losses_train.append(train_loss)
+        acc_train.append(train_acc)
+
+        test_loss, test_acc = validation(model, val_loader)
+        losses_test.append(test_loss)
+        acc_test.append(test_acc)
+
+        # model_file = 'models/model_' + str(epoch) + '.pth'
+        # torch.save(model.state_dict(), model_file)
+        # print('Saved model to ' + model_file + '.\n')
+
+    # Show the metric plots
+    xticks = 5
+    plot('loss', losses_train, losses_test, xtick_interval=xticks)
+    plot('accuracy', acc_train, acc_test, xtick_interval=xticks)
 
 
 
@@ -286,112 +371,86 @@ plot('accuracy', acc_train, acc_test, xtick_interval=xticks)
 
 
 
-#
-#
-#
-# net = models.resnet18(pretrained=True)
-# # net = net.cuda() if device else net
-#
-# criterion = nn.CrossEntropyLoss()
-# optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
-#
-# def accuracy(out, labels):
-#     _,pred = torch.max(out, dim=1)
-#     return torch.sum(pred == labels).item()
-#
-# num_ftrs = net.fc.in_features
-# net.fc = nn.Linear(num_ftrs, 128)
-# # net.fc = net.fc.cuda() if use_cuda else net.fc
-#
-# n_epochs = 1
-# print_every = 10
-# valid_loss_min = np.Inf
-# val_loss = []
-# val_acc = []
-# train_loss = []
-# train_acc = []
-# total_step = len(train_loader)
-# for epoch in range(1, n_epochs + 1):
-#     running_loss = 0.0
-#     correct = 0
-#     total = 0
-#     print(f'Epoch {epoch}\n')
-#     for batch_idx, (data_, target_) in enumerate(train_loader):
-#         data_, target_ = data_.to(device), target_.to(device)
-#         optimizer.zero_grad()
-#
-#         outputs = net(data_)
-#         loss = criterion(outputs, target_)
-#         loss.backward()
-#         optimizer.step()
-#
-#         running_loss += loss.item()
-#         _, pred = torch.max(outputs, dim=1)
-#         correct += torch.sum(pred == target_).item()
-#         total += target_.size(0)
-#         if (batch_idx) % 20 == 0:
-#             print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
-#                   .format(epoch, n_epochs, batch_idx, total_step, loss.item()))
-#     train_acc.append(100 * correct / total)
-#     train_loss.append(running_loss / total_step)
-#     print(f'\ntrain-loss: {np.mean(train_loss):.4f}, train-acc: {(100 * correct / total):.4f}')
-#     batch_loss = 0
-#     total_t = 0
-#     correct_t = 0
-#     with torch.no_grad():
-#         net.eval()
-#         for data_t, target_t in (val_loader):
-#             data_t, target_t = data_t.to(device), target_t.to(device)
-#             outputs_t = net(data_t)
-#             loss_t = criterion(outputs_t, target_t)
-#             batch_loss += loss_t.item()
-#             _, pred_t = torch.max(outputs_t, dim=1)
-#             correct_t += torch.sum(pred_t == target_t).item()
-#             total_t += target_t.size(0)
-#         val_acc.append(100 * correct_t / total_t)
-#         val_loss.append(batch_loss / len(val_loader))
-#         network_learned = batch_loss < valid_loss_min
-#         print(f'validation loss: {np.mean(val_loss):.4f}, validation acc: {(100 * correct_t / total_t):.4f}\n')
-#
-#         if network_learned:
-#             valid_loss_min = batch_loss
-#             torch.save(net.state_dict(), 'resnet.pt')
-#             print('Improvement-Detected, save-model')
-#     net.train()
-#
-# fig = plt.figure(figsize=(20,10))
-# plt.title("Train-Validation Accuracy")
-# plt.plot(train_acc, label='train')
-# plt.plot(val_acc, label='validation')
-# plt.xlabel('num_epochs', fontsize=12)
-# plt.ylabel('accuracy', fontsize=12)
-# plt.legend(loc='best')
-#
-#
-# def visualize_model(net, num_images=4):
-#     images_so_far = 0
-#     fig = plt.figure(figsize=(15, 10))
-#
-#     for i, data in enumerate(val_loader):
-#         inputs, labels = data
-#         if use_cuda:
-#             inputs, labels = inputs.cuda(), labels.cuda()
-#         outputs = net(inputs)
-#         _, preds = torch.max(outputs.data, 1)
-#         preds = preds.cpu().numpy() if use_cuda else preds.numpy()
-#         for j in range(inputs.size()[0]):
-#             images_so_far += 1
-#             ax = plt.subplot(2, num_images // 2, images_so_far)
-#             ax.axis('off')
-#             ax.set_title('predictes: {}'.format(val_loader.classes[preds[j]]))
-#             imshow(inputs[j])
-#
-#             if images_so_far == num_images:
-#                 return
-#
-#
-# plt.ion()
-# visualize_model(net)
-# plt.ioff()
-#
-#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
