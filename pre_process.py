@@ -3,7 +3,6 @@ from os import listdir
 from os.path import isfile, join
 import os
 from PIL import Image
-import PIL
 import numpy as np
 from os.path import exists
 from tqdm import tqdm
