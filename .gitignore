@@ -3,3 +3,6 @@
 *.log
 __pycache__/
 fundus_ds/
+models/
+plots/
+random/

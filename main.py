@@ -16,7 +16,7 @@ import pandas as pd
 import file_locs
 import ssl
 
-parser = argparse.ArgumentParser(description="DESCRIPTION")
+parser = argparse.ArgumentParser(description="Main Arguments")
 parser.add_argument('--batch-size', type=int, default=2, metavar='N',
                     help='input batch size for training (default: 2)')
 parser.add_argument('--epochs', type=int, default=10, metavar='N',
