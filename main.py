@@ -49,6 +49,8 @@ parser.add_argument('--save-plots', action="store_true", default=False,
                     help='Saving Plots')
 parser.add_argument('--save-plot-dir', type=str, metavar='plot_dir',
                     help='Directory to Save Plots')
+parser.add_argument('--root-dir', type=str, default="./", metavar='root_dir',
+                        help='root dir of the project')
 
 args = parser.parse_args()
 
@@ -242,13 +244,17 @@ def main():
     transforms = T.Compose(trans)
 
     DROP_VALS = ['ID', 'Disease_Risk']
-    y_train_vals = pd.read_csv(file_locs.TRAIN_CSV)
+    
+    y_train_vals = pd.read_csv(args.root_dir + file_locs.TRAIN_CSV)
     y_train_vals = np.array(y_train_vals.drop(DROP_VALS, axis=1))
-    y_val_vals = pd.read_csv(file_locs.VAL_CSV)
+    y_val_vals = pd.read_csv(args.root_dir + file_locs.VAL_CSV)
     y_val_vals = np.array(y_val_vals.drop(DROP_VALS, axis=1))
 
-    train_dataset = CustomDataSet(file_locs.TRAIN_DS + "resized/auto_crop/same_size/", y_values=y_train_vals, transform=transforms)
-    val_dataset = CustomDataSet(file_locs.VAL_DS + "resized/auto_crop/same_size/", y_values=y_val_vals, transform=transforms)
+    train_ds_location = args.root_dir + file_locs.TRAIN_DS + "resized/auto_crop/same_size/"
+    val_ds_location = args.root_dir + file_locs.VAL_DS + "resized/auto_crop/same_size/"
+
+    train_dataset = CustomDataSet(train_ds_location, y_values=y_train_vals, transform=transforms)
+    val_dataset = CustomDataSet(val_ds_location, y_values=y_val_vals, transform=transforms)
     # get_mean_and_std(train_dataset)
 
     trainsubset_ind = torch.randperm(len(train_dataset))[:args.train_ds_sz]
