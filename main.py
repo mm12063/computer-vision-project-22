@@ -98,7 +98,7 @@ def plot(metric, train_vals, test_vals, xtick_interval=2, save=False, save_loc=N
         if not os.path.exists(save_loc):
             os.makedirs(save_loc)
         full_loc = f"{save_loc}{plot_name}"
-        print(f"Plot(s) saved to: {full_loc}")
+        print(f"Plot saved to: {full_loc}")
         plt.savefig(full_loc)
     plt.show()
 
@@ -188,8 +188,6 @@ def validation(model, val_loader):
         output = model(data)
         targets = targets.to(torch.float32)
         validation_loss += criterion(output, targets)
-
-        print(validation_loss)
 
         predicted = output
         predicted = (predicted > 0.5).float()
