@@ -43,9 +43,6 @@ def balance_data(ds_loc, filename, num_to_create, starting_id):
     full_loc = f"{START_DIR}{filename}.png"
     im = Image.open(full_loc)
 
-    # # TODO - REMOVE
-    # im.save(f"{DEST_DIR}{filename}.png", 'png')
-
     print(f"Creating {num_to_create}")
     for i in range(0, num_to_create):
         THRESH = 0.6
@@ -96,11 +93,30 @@ for col_name in df:
     if num_existing < TOTAL_TARGET:
         num_to_create = TOTAL_TARGET - num_existing
         print(f"{col_name} – num_existing: {num_existing}")
-        img_id = df.loc[df[col_name] == 1]['ID'].iloc[:1]
+
+        # Instead of the FIRST, get the ID of the row with
+        # the lowest sum of the ROW
+        # img_id = df.loc[df[col_name] == 1]['ID'].iloc[:1]
+
+        # Get the row ID containing the fewset number of other diseases
+        lowest = float('inf')
+        img_id = 0
+        row_ids = df.loc[df[col_name] == 1]['ID']
+        for id in row_ids:
+            row_sum = df.loc[id-1].sum() - id
+            print(lowest)
+            if row_sum < lowest:
+                lowest = row_sum
+                img_id = id
+        print("lowest_id: ", img_id)
+        print("lowest sum: ", lowest)
 
 
-        if len(img_id):
-            img_id = img_id.values[0]
+        # exit(0)
+
+
+        if len(row_ids):
+            # img_id = img_id.values[0]
             print(f"{col_name}: {img_id}")
             balance_data(file_locs.TRAIN_DS, img_id, num_to_create, highest_id)
             update += 1
@@ -116,15 +132,6 @@ df.to_csv("./test.csv", index=False)
 
 
 
-
-
-
-# For image of interest IMAGE
-# Store how many images IMAGE currently has: num_existing
-# Save the row for the IMAGE: IMAGE_ROW
-# Save the highest ID number
-# For each new image
-#     Add a new row to bottom of table with IMAGE_ROW incrementing the ID in table
 
 
 
