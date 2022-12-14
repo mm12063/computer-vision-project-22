@@ -100,30 +100,31 @@ def imshow(img, title=None):
     plt.pause(0.001)
 
 
-def train(args, epoch, model, optimizer, criterion, train_loader):
+def train(args, device, epoch, model, optimizer, criterion, train_loader):
     model.train()
     train_loss = 0
     correct = 0
     total = 0
 
-    for batch_idx, (data, targets) in enumerate(train_loader):
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         if args.print_vals:
             print("output.shape", output.shape)
-            print("target.shape", targets.shape)
+            print("target.shape", target.shape)
 
-        targets = targets.to(torch.float32)
-        loss = criterion(output, targets)
+        target = target.to(torch.float32)
+        loss = criterion(output, target)
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
 
         predicted = output
         predicted = (predicted > 0.5).float()
-        total += targets.size(0)
+        total += target.size(0)
 
-        if predicted.equal(targets):
+        if predicted.equal(target):
             correct += 1
 
         if batch_idx % args.log_interval == 0:
@@ -136,23 +137,23 @@ def train(args, epoch, model, optimizer, criterion, train_loader):
 
     return train_loss, train_acc
 
-
-def validation(model, val_loader, criterion):
+def validation(device, model, val_loader, criterion):
     model.eval()
     validation_loss = 0
     correct = 0
     partial_cor = 0
     class_cor = torch.zeros(NUM_CLASSES)
-    for data, targets in val_loader:
+    for data, target in val_loader:
+        data, target = data.to(device), target.to(device)
         output = model(data)
-        targets = targets.to(torch.float32)
-        validation_loss += criterion(output, targets)
+        target = target.to(torch.float32)
+        validation_loss += criterion(output, target)
 
         predicted = output
         predicted = (predicted > 0.5).float()
 
-        for i in range(len(targets)):
-            t = targets[i]
+        for i in range(len(target)):
+            t = target[i]
             p = predicted[i]
             res_by_class = p.eq(t)
 
@@ -186,6 +187,10 @@ def main():
                         help='input batch size for training (default: 2)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
+    parser.add_argument('--no-cuda', action='store_true', default=True,
+                        help='disable cuda (default: True)')
+    parser.add_argument('--no-mps', action='store_true', default=False,
+                        help='disables macOS GPU training')
     parser.add_argument('--sgd', action='store_true', default=False,
                         help='use sgd or not (default: Adam)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
@@ -232,8 +237,18 @@ def main():
                         help='validation csv file')
     args = parser.parse_args()
 
+    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    use_mps = not args.no_mps and torch.backends.mps.is_available()
+
+    if use_cuda:
+        device = torch.device("cuda")
+    elif use_mps:
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+
     # Set the Loss/Optimizers
-    model = McModel(args.model_name)
+    model = McModel(args.model_name).to(device)
     criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     if args.sgd:
@@ -286,11 +301,11 @@ def main():
     acc_test = []
 
     for epoch in range(1, args.epochs + 1):
-        train_loss, train_acc = train(args, epoch, model, optimizer, criterion, train_loader)
+        train_loss, train_acc = train(args, device, epoch, model, optimizer, criterion, train_loader)
         losses_train.append(train_loss)
         acc_train.append(train_acc)
 
-        test_loss, test_acc = validation(model, val_loader, criterion)
+        test_loss, test_acc = validation(device, model, val_loader, criterion)
         losses_test.append(test_loss)
         acc_test.append(test_acc)
 
