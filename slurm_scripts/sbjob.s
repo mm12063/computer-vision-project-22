@@ -26,6 +26,7 @@ python3 ${SCRIPT_DIR}main.py \
 --epochs 1 \
 --batch-size 64 \
 --lr 0.00001 \
+--decay 1.0 \
 --momentum 0.9 \
 --image-size 64 \
 --model-name vgg19 \
@@ -34,5 +35,6 @@ python3 ${SCRIPT_DIR}main.py \
 --save-plots \
 --save-plot-dir $PLOTS_DIR \
 --root-dir ${SCRIPT_DIR} \
---num-worker 2
+--num-worker 2 \
+#--sgd 
 "
