@@ -25,12 +25,16 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='number of intervals to log (default: 10)')
 parser.add_argument('--num-workers', type=int, default=0, metavar='N',
                     help='number of workers to use (default: 0)')
+parser.add_argument('--sgd', action='store_true', default=False,
+                    help='Optimizaer (default: Adam)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 1.0)')
 parser.add_argument('--momentum', type=float, default=0.9, metavar='momentum',
-                        help='Change the Momentum of Optimizer (default: 0.9)')
+                        help='Change the SGD Momentum of Optimizer (default: 0.9)')
+parser.add_argument('--decay', type=float, default=1.0, metavar='decay',
+                        help='Change the Decay of SGD Optimizer (default: 1.0)')
 parser.add_argument('--model-name', type=str, default="resent18", metavar='model',
-                    help='Resnet Size: resent18, resnet50, resnet152')
+                    help='Resnet Size: resent18, resnet50, resnet152. vgg19')
 parser.add_argument('--print-vals', action='store_true', default=False,
                     help='Print the values during run')
 parser.add_argument('--use-cutout', action='store_true', default=False,
@@ -91,7 +95,11 @@ class McModel(nn.Module):
 # Set the Loss/Optimizers
 model = McModel();
 criterion = nn.BCELoss()
-optimizer = optim.Adam(model.parameters(), lr=args.lr)
+optimizer = None;
+if args.sgd:
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.decay)
+else:
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 #TODO
 # Balance
