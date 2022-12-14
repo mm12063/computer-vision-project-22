@@ -4,10 +4,10 @@
 #SBATCH --time=12:00:00
 #SBATCH --gres=gpu:a100:1
 #SBATCH --mem=128GB
-#SBATCH --job-name=2
+#SBATCH --job-name=4
 #SBATCH --mail-type=END
 #SBATCH --mail-user=${USER}@nyu.edu
-#SBATCH --output=2_%j.out
+#SBATCH --output=4_%j.out
 #SBATCH --wrap "sleep infinity"
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
