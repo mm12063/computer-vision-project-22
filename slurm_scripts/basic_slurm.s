@@ -13,6 +13,11 @@ SCRIPT_DIR=${SCRATCH}/cv_project_22/
 PLOTS_DIR=${SCRIPT_DIR}plots/
 MODELS_DIR=${SCRIPT_DIR}models/
 
+TRAIN_IMGS=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/Training/resized_complete/upsampled_64
+TRAIN_CSV=${SCRIPT_DIR}plots/.....
+VAL_IMGS=${SCRIPT_DIR}plots/.....
+VAL_CSV=${SCRIPT_DIR}plots/.....
+
 singularity exec --nv \
 --bind /scratch \
 --overlay ${SCRATCH}/cv_gpu/overlay-10GB-400K.ext3:ro \
@@ -29,6 +34,26 @@ python3 ${SCRIPT_DIR}main.py \
 --save-model-dir $MODELS_DIR \
 --save-plots \
 --save-plot-dir $PLOTS_DIR \
---root-dir ${SCRIPT_DIR}
-
+--root-dir ${SCRIPT_DIR} \
+--train-csv ${TRAIN_CSV} \
+--train-imgs-dir ${TRAIN_IMGS} \
+--val-csv ${VAL_CSV} \
+--val-imgs-dir ${VAL_IMGS}
 "
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

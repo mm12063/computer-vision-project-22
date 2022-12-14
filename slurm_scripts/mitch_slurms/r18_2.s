@@ -4,10 +4,10 @@
 #SBATCH --time=12:00:00
 #SBATCH --gres=gpu:a100:1
 #SBATCH --mem=128GB
-#SBATCH --job-name=1
+#SBATCH --job-name=2
 #SBATCH --mail-type=END
 #SBATCH --mail-user=${USER}@nyu.edu
-#SBATCH --output=1_%j.out
+#SBATCH --output=2_%j.out
 #SBATCH --wrap "sleep infinity"
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
@@ -30,7 +30,7 @@ python3 ${SCRIPT_DIR}main.py \
 --train-ds-sz 9226 --val-ds-sz 640 \
 --model-name resent18 \
 --lr 0.001 \
---epochs 50 \
+--epochs 100 \
 --decay 1.0 \
 --momentum 0.9 \
 --save-model \
