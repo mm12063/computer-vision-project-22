@@ -300,6 +300,8 @@ def main():
     full_model_name = f'{args.model_name}'
     full_model_name += f'__l_{lr_str}__b_{args.batch_size}__i_{args.image_size}'
     full_model_name += f'__e_{args.epochs}__c_{is_cutout_used}'
+    if args.sgd:
+        full_model_name += f'__sgd__d_{args.decay}__m_{args.momentum}'
 
     if args.save_model:
         if not os.path.exists(args.save_model_dir):
