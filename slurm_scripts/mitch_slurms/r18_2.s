@@ -21,7 +21,7 @@ VAL_CSV=${SCRIPT_DIR}data/fundus_ds/Evaluation_Set/Evaluation_Set/RFMiD_Validati
 
 singularity exec --nv \
 --bind /scratch \
---overlay ${SCRATCH}/cv_gpu/overlay-10GB-400K.ext3:ro \
+--overlay ${SCRATCH}/cv_gpu2/overlay-50G-10M.ext3:ro \
 /scratch/work/public/singularity/cuda11.3.0-cudnn8-devel-ubuntu20.04.sif \
 /bin/bash -c "
 source /ext3/env.sh
