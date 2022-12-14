@@ -194,6 +194,8 @@ def main():
                         help='number of workers to use (default: 0)')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001)')
+    parser.add_argument('--decay', type=float, default=1.0, metavar='decay',
+                        help='decay (default: 1.0)')
     parser.add_argument('--momentum', type=float, default=0.9, metavar='momentum',
                         help='Change the Momentum of Optimizer (default: 0.9)')
     parser.add_argument('--model-name', type=str, default="resnet18", metavar='model',
