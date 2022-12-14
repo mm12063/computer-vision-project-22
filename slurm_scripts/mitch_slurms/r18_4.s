@@ -1,17 +1,18 @@
 #!/bin/bash
+EXPER_NUM=4
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --time=12:00:00
 #SBATCH --gres=gpu:a100:1
 #SBATCH --mem=128GB
-#SBATCH --job-name=4
+#SBATCH --job-name=${EXPER_NUM}
 #SBATCH --mail-type=END
 #SBATCH --mail-user=${USER}@nyu.edu
-#SBATCH --output=4_%j.out
+#SBATCH --output=${EXPER_NUM}_%j.out
 #SBATCH --wrap "sleep infinity"
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
-PLOTS_DIR=${SCRIPT_DIR}plots/
+PLOTS_DIR=${SCRIPT_DIR}plots/${EXPER_NUM}/
 MODELS_DIR=${SCRIPT_DIR}models/
 
 TRAIN_IMGS=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/Training/resized_complete/upsampled_64

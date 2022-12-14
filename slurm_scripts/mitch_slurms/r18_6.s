@@ -1,5 +1,5 @@
 #!/bin/bash
-EXPER_NUM=3
+EXPER_NUM=6
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --time=12:00:00
@@ -34,9 +34,10 @@ cd $RUNDIR
 python3 ${SCRIPT_DIR}main.py \
 --train-ds-sz 9226 --val-ds-sz 640 \
 --model-name resent18 \
---lr 0.0001 \
---epochs 50 \
---decay 1.0 \
+--lr 0.001 \
+--epochs 100 \
+--sgd \
+--decay 0.9 \
 --momentum 0.9 \
 --save-model \
 --save-model-dir $MODELS_DIR \
