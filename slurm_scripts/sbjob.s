@@ -36,5 +36,5 @@ python3 ${SCRIPT_DIR}main.py \
 --save-plot-dir $PLOTS_DIR \
 --root-dir ${SCRIPT_DIR} \
 --num-worker 2 \
-#--sgd 
+#--sgd
 "
