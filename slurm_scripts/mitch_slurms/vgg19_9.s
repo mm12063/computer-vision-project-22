@@ -27,10 +27,6 @@ singularity exec --nv \
 /bin/bash -c "
 source /ext3/env.sh
 
-RUNDIR=${SCRIPT_DIR}slurm_scripts/mitch_slurms/run-${SLURM_JOB_ID/.*}
-mkdir -p $RUNDIR
-cd $RUNDIR
-
 python3 ${SCRIPT_DIR}main.py \
 --train-ds-sz 9226 --val-ds-sz 640 \
 --model-name vgg19 \
