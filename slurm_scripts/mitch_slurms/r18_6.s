@@ -9,7 +9,6 @@ EXPER_NUM=6
 #SBATCH --mail-type=END
 #SBATCH --mail-user=${USER}@nyu.edu
 #SBATCH --output=${EXPER_NUM}_%j.out
-#SBATCH --wrap "sleep infinity"
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
 PLOTS_DIR=${SCRIPT_DIR}plots/${EXPER_NUM}/

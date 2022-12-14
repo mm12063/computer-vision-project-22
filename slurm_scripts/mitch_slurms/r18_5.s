@@ -8,7 +8,6 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-user=${USER}@nyu.edu
 #SBATCH --output=5_%j.out
-#SBATCH --wrap "sleep infinity"
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
 PLOTS_DIR=${SCRIPT_DIR}plots/5/

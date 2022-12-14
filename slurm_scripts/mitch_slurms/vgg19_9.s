@@ -3,13 +3,12 @@ EXPER_NUM=9
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --time=12:00:00
-#SBATCH --gres=gpu:a100:1
-#SBATCH --mem=128GB
+#SBATCH --gres=gpu:a100:2
+#SBATCH --mem=256GB
 #SBATCH --job-name=${EXPER_NUM}
 #SBATCH --mail-type=END
 #SBATCH --mail-user=${USER}@nyu.edu
 #SBATCH --output=${EXPER_NUM}_%j.out
-#SBATCH --wrap "sleep infinity"
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
 PLOTS_DIR=${SCRIPT_DIR}plots/${EXPER_NUM}/
