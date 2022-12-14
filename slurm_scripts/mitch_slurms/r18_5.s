@@ -1,18 +1,17 @@
 #!/bin/bash
-EXPER_NUM=5
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --time=12:00:00
 #SBATCH --gres=gpu:a100:1
 #SBATCH --mem=128GB
-#SBATCH --job-name=${EXPER_NUM}
+#SBATCH --job-name=5
 #SBATCH --mail-type=END
 #SBATCH --mail-user=${USER}@nyu.edu
-#SBATCH --output=${EXPER_NUM}_%j.out
+#SBATCH --output=5_%j.out
 #SBATCH --wrap "sleep infinity"
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
-PLOTS_DIR=${SCRIPT_DIR}plots/${EXPER_NUM}/
+PLOTS_DIR=${SCRIPT_DIR}plots/5/
 MODELS_DIR=${SCRIPT_DIR}models/
 
 TRAIN_IMGS=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/Training/resized_complete/upsampled_64
@@ -26,10 +25,6 @@ singularity exec --nv \
 /scratch/work/public/singularity/cuda11.3.0-cudnn8-devel-ubuntu20.04.sif \
 /bin/bash -c "
 source /ext3/env.sh
-
-RUNDIR=${SCRIPT_DIR}slurm_scripts/mitch_slurms/run-${SLURM_JOB_ID/.*}
-mkdir -p $RUNDIR
-cd $RUNDIR
 
 python3 ${SCRIPT_DIR}main.py \
 --train-ds-sz 9226 --val-ds-sz 640 \
