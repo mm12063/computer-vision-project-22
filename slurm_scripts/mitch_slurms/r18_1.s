@@ -42,7 +42,7 @@ python3 ${SCRIPT_DIR}main.py \
 --save-model-dir $MODELS_DIR \
 --save-plots \
 --save-plot-dir $PLOTS_DIR \
---num-worker 2 \
+--num-worker 1 \
 --train-csv ${TRAIN_CSV} \
 --train-imgs-dir ${TRAIN_IMGS} \
 --val-csv ${VAL_CSV} \
