@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from torchvision import models
+from torchvision import models, utils
 import torchvision.transforms as T
 from torch.utils.data import Dataset
 import natsort
@@ -217,6 +217,8 @@ def main():
                         help='Print the values during run')
     parser.add_argument('--use-cutout', action='store_true', default=False,
                         help='Adds cutout transformation')
+    parser.add_argument('--use-grayscale', action='store_true', default=False,
+                        help='use grayscale images')
     parser.add_argument('--cutout-prob', type=float, default=0.7, metavar='CP',
                         help='probability that cutout will be used (default: 0.7)')
     parser.add_argument('--image-size', type=int, default=128, metavar='N',
@@ -266,10 +268,11 @@ def main():
     # Create the transformations
     trans = []
     trans.append(T.ToTensor())
-    trans.append(T.Normalize(
-        (0.5130, 0.3182, 0.1666),
-        (0.2551, 0.1793, 0.1329))
-    )
+    if not args.use_grayscale:
+        trans.append(T.Normalize(
+            (0.5130, 0.3182, 0.1666),
+            (0.2551, 0.1793, 0.1329))
+        )
 
     is_cutout_used = "False"
     if args.use_cutout:
@@ -335,7 +338,7 @@ def main():
         print(f'Saved model to {full_path}')
 
     # Show the metric plots
-    xticks = 5
+    xticks = 50
     plot('loss',
          losses_train,
          losses_test,
