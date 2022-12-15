@@ -19,6 +19,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 # Reproducibility
 torch.manual_seed(42)
 
+print(f"Using cuda: {torch.cuda.is_available()}")
+
 class McModel(nn.Module):
     def __init__(self, model_name):
         super(McModel, self).__init__()
@@ -187,8 +189,8 @@ def main():
                         help='input batch size for training (default: 2)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--no-cuda', action='store_true', default=True,
-                        help='disable cuda (default: True)')
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='disable cuda (default: False)')
     parser.add_argument('--no-mps', action='store_true', default=False,
                         help='disables macOS GPU training')
     parser.add_argument('--sgd', action='store_true', default=False,
