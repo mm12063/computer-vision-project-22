@@ -30,8 +30,6 @@ class McModel(nn.Module):
             self.network = models.resnet50(weights='ResNet50_Weights.DEFAULT')
         elif model_name == "resnet152":
             self.network = models.resnet152(weights='ResNet152_Weights.DEFAULT')
-        elif model_name == "alexnet":
-            self.network = models.alexnet(weights='AlexNet_Weights.DEFAULT')
         elif model_name == "vgg19":
             self.network = models.vgg19(weights='VGG19_Weights.DEFAULT')
             in_feats = self.network.classifier[6].in_features
