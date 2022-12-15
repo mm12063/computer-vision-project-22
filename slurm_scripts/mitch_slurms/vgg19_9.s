@@ -1,7 +1,7 @@
 #!/bin/bash
 EXPER_NUM=9
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=16
+#SBATCH --nodes=6
+#SBATCH --cpus-per-task=1
 #SBATCH --time=12:00:00
 #SBATCH --gres=gpu:a100:2
 #SBATCH --mem=256GB

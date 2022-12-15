@@ -5,17 +5,17 @@
 #SBATCH --time=12:00:00
 #SBATCH --gres=gpu:a100:1
 #SBATCH --mem=40GB
-#SBATCH --job-name=6
 #SBATCH --mail-type=END
-#SBATCH --output=6_%j.out
+#SBATCH --output=12_128_%j.out
+#SBATCH --job-name=12_128
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
-PLOTS_DIR=${SCRIPT_DIR}plots/6/
+PLOTS_DIR=${SCRIPT_DIR}plots/12_128/
 MODELS_DIR=${SCRIPT_DIR}models/
 
-TRAIN_IMGS=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/Training/resized_complete/upsampled_64
+TRAIN_IMGS=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/Training/resized_complete/128/
 TRAIN_CSV=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/RFMiD_Training_Labels_w_upsampling.csv
-VAL_IMGS=${SCRIPT_DIR}data/fundus_ds/Evaluation_Set/Evaluation_Set/Validation/resized_complete/64
+VAL_IMGS=${SCRIPT_DIR}data/fundus_ds/Evaluation_Set/Evaluation_Set/Validation/resized_complete/128/
 VAL_CSV=${SCRIPT_DIR}data/fundus_ds/Evaluation_Set/Evaluation_Set/RFMiD_Validation_Labels.csv
 
 singularity exec --nv \
@@ -27,10 +27,9 @@ source /ext3/env.sh
 
 python3 ${SCRIPT_DIR}main.py \
 --train-ds-sz 9226 --val-ds-sz 640 \
---model-name resent18 \
---lr 0.001 \
+--model-name vgg19 \
+--lr 0.0001 \
 --epochs 100 \
---sgd \
 --decay 0.9 \
 --momentum 0.9 \
 --save-model \
