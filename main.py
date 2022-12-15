@@ -18,6 +18,7 @@ NUM_CLASSES = 45
 ssl._create_default_https_context = ssl._create_unverified_context
 # Reproducibility
 torch.manual_seed(42)
+higest_class_acc = 0.0
 
 print(f"Using cuda: {torch.cuda.is_available()}")
 
@@ -177,8 +178,15 @@ def validation(device, model, val_loader, criterion):
             validation_loss,
             partial_cor, num_items, pacc,
             correct, num_items, acc))
+
+    class_acc = class_cor / num_items * 100
+
+    global higest_class_acc
+    if acc > higest_class_acc:
+        higest_class_acc = acc
+
     print(' class_cor: ' + str(class_cor))
-    print(' class_acc: ' + str(class_cor / num_items * 100))
+    print(' class_acc: ' + str(class_acc))
 
     return validation_loss.item(), acc
 
@@ -213,7 +221,7 @@ def main():
                         help='Adds cutout transformation')
     parser.add_argument('--cutout-prob', type=float, default=0.7, metavar='CP',
                         help='probability that cutout will be used (default: 0.7)')
-    parser.add_argument('--image-size', type=int, default=256, metavar='N',
+    parser.add_argument('--image-size', type=int, default=128, metavar='N',
                         help='resize image to this (square) size (default: 256)')
     parser.add_argument('--train-ds-sz', type=int, default=1920, metavar='N',
                         help='Training Dataset Size (default: 1920)')
@@ -347,6 +355,8 @@ def main():
          save_loc=args.save_plot_dir,
          plot_name=f'acc__{full_model_name}.png'
          )
+
+    print(f"Highest Acc Overall: {round(higest_class_acc, 2)}%")
 
 if __name__ == '__main__':
     main()

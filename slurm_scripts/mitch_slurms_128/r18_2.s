@@ -14,7 +14,7 @@ PLOTS_DIR=${SCRIPT_DIR}plots/2_128/
 MODELS_DIR=${SCRIPT_DIR}models/
 
 TRAIN_IMGS=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/Training/resized_complete/128/
-TRAIN_CSV=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/RFMiD_Training_Labels_w_upsampling.csv
+TRAIN_CSV=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/RFMiD_Training_Labels_w_upsampling_newen.csv
 VAL_IMGS=${SCRIPT_DIR}data/fundus_ds/Evaluation_Set/Evaluation_Set/Validation/resized_complete/128/
 VAL_CSV=${SCRIPT_DIR}data/fundus_ds/Evaluation_Set/Evaluation_Set/RFMiD_Validation_Labels.csv
 
