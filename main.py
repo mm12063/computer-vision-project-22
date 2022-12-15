@@ -13,7 +13,7 @@ import os
 import pandas as pd
 import ssl
 
-NUM_CLASSES = 28
+NUM_CLASSES = 45
 # Disable SSL Certificate
 ssl._create_default_https_context = ssl._create_unverified_context
 # Reproducibility
