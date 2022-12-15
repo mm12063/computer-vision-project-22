@@ -6,11 +6,11 @@
 #SBATCH --gres=gpu:a100:1
 #SBATCH --mem=40GB
 #SBATCH --mail-type=END
-#SBATCH --output=4_256_baseline_%j.out
-#SBATCH --job-name=4_256_baseline
+#SBATCH --output=4_256_baseline__r50_%j.out
+#SBATCH --job-name=4_256_baseline_r50
 
 SCRIPT_DIR=${SCRATCH}/cv_project_22/
-PLOTS_DIR=${SCRIPT_DIR}plots/4_256_baseline/
+PLOTS_DIR=${SCRIPT_DIR}plots/4_256_baseline_r50/
 MODELS_DIR=${SCRIPT_DIR}models/
 
 TRAIN_IMGS=${SCRIPT_DIR}data/fundus_ds/Training_Set/Training_Set/Training/baseline/baseline_256/
