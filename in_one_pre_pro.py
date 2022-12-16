@@ -2,7 +2,7 @@ import file_locs
 from os import listdir
 from os.path import isfile, join
 import os
-from PIL import Image
+from PIL import Image, ImageEnhance
 import numpy as np
 from os.path import exists
 from tqdm import tqdm
@@ -15,11 +15,11 @@ DATASETS_TO_UPDATE = [
 ]
 
 PUSH_TO_SERVER = False
-FINAL_SIZE = 32
+FINAL_SIZE = 256
 
-def resize_in_one_shot(ds_loc):
+def resize_in_one_shot(ds_loc, intense):
     START_DIR = f"{ds_loc}"
-    DEST_DIR = f"{START_DIR}resized_complete/{FINAL_SIZE}/"
+    DEST_DIR = f"{START_DIR}resized_complete/grayscale/{FINAL_SIZE}/{intense}/"
 
     LARGE_IMG_SIZE = (4288, 2848)
 
@@ -64,7 +64,12 @@ def resize_in_one_shot(ds_loc):
         width, height = im.size
         if width == FINAL_SIZE and height == FINAL_SIZE:
             continue
-        im = im.resize((int(FINAL_SIZE), int(FINAL_SIZE)), Image.Resampling.LANCZOS)
+        im = im.resize((int(FINAL_SIZE), int(FINAL_SIZE)), Image.Resampling.LANCZOS).convert('L')
+
+        # Grayscale
+        enhancer = ImageEnhance.Contrast(im)
+        factor = intense
+        im = enhancer.enhance(factor)
 
         # Save the final image
         im.save(f"{DEST_DIR}{filename}", 'png')
@@ -85,7 +90,9 @@ def auto_crop(image):
 for ds_loc in DATASETS_TO_UPDATE:
     print(f"Resizing and cropping image for DS:")
     print(ds_loc)
-    resize_in_one_shot(ds_loc)
+    intensities = [1.5, 1.75, 2.0]
+    for intense in intensities:
+        resize_in_one_shot(ds_loc, intense)
 
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -145,7 +152,7 @@ for ds_loc in DATASETS_TO_UPDATE:
         print(ins)
         subprocess.Popen(f'ssh greene {ins}', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-        # Set permission
+        # Set additional permissions
         ins = f"setfacl -R -m 'u:mya6510:r-x' {SERV_PROJ_ROOT}fundus_ds/Evaluation_Set/Evaluation_Set/Validation/resized_complete/{FINAL_SIZE}/"
         print(ins)
         subprocess.Popen(f'ssh greene {ins}', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -155,26 +162,9 @@ for ds_loc in DATASETS_TO_UPDATE:
         subprocess.Popen(f'ssh greene {ins}', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
 
-        print("Locations:\n")
+        print("Uploaded Locations:\n")
         print(f"{SERV_PROJ_ROOT}fundus_ds/Training_Set/Training_Set/Training/resized_complete/{FINAL_SIZE}/")
         print()
         print(f"{SERV_PROJ_ROOT}fundus_ds/Evaluation_Set/Evaluation_Set/Validation/resized_complete/{FINAL_SIZE}/")
 
         print("*"*20)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

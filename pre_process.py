@@ -25,12 +25,12 @@ def resize_large_images(ds_loc):
     files = [f for f in listdir(START_DIR) if isfile(join(START_DIR, f))]
     for filename in tqdm(files):
         full_loc = ds_loc + filename
-        if (filename == ".DS_Store") or exists(DEST_DIR+filename):
+        if (filename == ".DS_Store") or exists(DEST_DIR + filename):
             continue
         im = Image.open(full_loc)
         if im.size == LARGE_IMG_SIZE:
-            resizedImage = im.resize((int(LARGE_IMG_SIZE[0]*.5), int(LARGE_IMG_SIZE[1]*.5)), Image.Resampling.LANCZOS)
-            resizedImage.save(f"{DEST_DIR}{filename}", 'png')
+            im = im.resize((int(LARGE_IMG_SIZE[0]*.5), int(LARGE_IMG_SIZE[1]*.5)), Image.Resampling.LANCZOS)
+        im.save(f"{DEST_DIR}{filename}", 'png')
 
 
 def crop_to_remove_border(image):
@@ -39,7 +39,7 @@ def crop_to_remove_border(image):
     im[im < thresh] = 0
     y_nonzero, x_nonzero, _ = np.nonzero(im)
     cropped = image.crop((np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero)))
-    if cropped.size != (0,0):
+    if cropped.size != (0, 0):
         return cropped
     else:
         return image
@@ -112,10 +112,13 @@ def crop_all_to_same_size(ds_loc):
 
 
 
-def resize_all(ds_loc):
+def resize_all(ds_loc, size):
     print("Resizing all images to similar size...")
     DIR = f"{ds_loc}resized/auto_crop/same_size/"
-    RESIZE_SIZE = 1000
+    DEST_DIR = f"{DIR}{size}/"
+
+    if not os.path.exists(DEST_DIR):
+        os.makedirs(DEST_DIR)
 
     files = [f for f in listdir(DIR) if isfile(join(DIR, f))]
 
@@ -125,10 +128,10 @@ def resize_all(ds_loc):
             continue
         im = Image.open(full_loc)
         width, height = im.size
-        if width == RESIZE_SIZE and height == RESIZE_SIZE:
+        if width == size and height == size:
             continue
-        resized = im.resize((int(RESIZE_SIZE), int(RESIZE_SIZE)), Image.Resampling.LANCZOS)
-        resized.save(f"{DIR}{filename}", 'png')
+        resized = im.resize((int(size), int(size)), Image.Resampling.LANCZOS)
+        resized.save(f"{DEST_DIR}{filename}", 'png')
 
 
 
@@ -138,21 +141,6 @@ for ds_loc in DATASETS_TO_UPDATE:
     auto_cropping(ds_loc)
     revert_bad_crops(ds_loc)
     crop_all_to_same_size(ds_loc)
-    resize_all(ds_loc)
+    resize_all(ds_loc, 1000)
+    resize_all(ds_loc, 256)
     print("*"*20)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

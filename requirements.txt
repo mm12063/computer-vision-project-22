@@ -6,3 +6,4 @@ natsort
 Pillow
 pandas
 tqdm
+opencv-python

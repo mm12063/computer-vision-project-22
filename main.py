@@ -14,13 +14,13 @@ import pandas as pd
 import ssl
 
 NUM_CLASSES = 45
-# Disable SSL Certificate
-ssl._create_default_https_context = ssl._create_unverified_context
-# Reproducibility
-torch.manual_seed(42)
 higest_class_acc = 0.0
 
-print(f"Using cuda: {torch.cuda.is_available()}")
+# Disable SSL Certificate
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# Reproducibility
+torch.manual_seed(42)
 
 class McModel(nn.Module):
     def __init__(self, model_name):
@@ -44,6 +44,7 @@ class McModel(nn.Module):
         output = self.network(x)
         m = nn.Sigmoid()
         return m(output)
+
 
 def plot(metric, train_vals, test_vals, xtick_interval=2, save=False, save_loc=None, plot_name="Default_Name"):
     plt.figure(figsize=(5, 3))
@@ -137,6 +138,7 @@ def train(args, device, epoch, model, optimizer, criterion, train_loader):
     train_loss /= len(train_loader.dataset)
 
     return train_loss, train_acc
+
 
 def validation(device, model, val_loader, criterion):
     model.eval()
